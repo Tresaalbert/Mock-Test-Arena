@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mock Test Arena</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;800&family=Figtree:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* Palette: Lilac mist, Indigo ink, Electric violet, Marigold, Mint, Rose */
+:root{
+  --bg:#F3F0FB; --ink:#1D1B3A; --mut:#5E5B80; --card:#FFFFFF; --line:#DAD5F0;
+  --acc:#5B3DF5; --pop:#FFC93C; --ok:#168A5C; --ok-bg:#DDF5E9; --bad:#C93A4B; --bad-bg:#FBE1E4;
+  --head:"Sora",system-ui,sans-serif; --body:"Figtree",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+*{box-sizing:border-box;margin:0}
+[hidden]{display:none!important}
+body{font:400 1.05rem/1.6 var(--body);background:var(--bg);color:var(--ink);min-height:100vh}
+:focus-visible{outline:3px solid var(--pop);outline-offset:2px}
+header{background:var(--ink);color:#fff;padding:1.6rem clamp(1rem,5vw,3rem);border-bottom:6px solid var(--pop)}
+header h1{font:800 clamp(1.6rem,5vw,2.4rem)/1.1 var(--head)}
+header p{color:#C9C4F0;margin-top:.3rem}
+main{max-width:46rem;margin:0 auto;padding:2rem 1.2rem 4rem}
+h2{font:800 clamp(1.3rem,4vw,1.8rem)/1.25 var(--head)}
+h3{font:700 1.1rem var(--head);margin:2rem 0 .8rem}
+.sub{color:var(--mut);margin:.4rem 0 1.5rem}
+
+.topics{display:grid;gap:1rem;grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+.topic{all:unset;box-sizing:border-box;cursor:pointer;background:var(--card);border:2px solid var(--line);border-radius:1rem;padding:1.2rem;display:flex;flex-direction:column;gap:.3rem}
+.topic:hover{border-color:var(--acc)}
+.topic:focus-visible{outline:3px solid var(--pop);outline-offset:2px}
+.topic b{font:700 1.15rem var(--head)}
+.topic small{color:var(--mut)}
+.topic .best{margin-top:.4rem;font-weight:600;color:var(--acc)}
+
+.top{display:flex;justify-content:space-between;align-items:center;gap:1rem;font-weight:600;margin-bottom:.7rem}
+.timer{background:var(--ink);color:#fff;border-radius:2rem;padding:.15rem .9rem;min-width:4rem;text-align:center}
+.timer.low{background:var(--bad)}
+.track{height:8px;background:var(--line);border-radius:4px;margin-bottom:1.6rem;overflow:hidden}
+#bar{height:100%;width:0;background:var(--acc);transition:width .3s}
+#question{margin-bottom:1.2rem}
+
+.options{display:grid;gap:.7rem}
+.opt{all:unset;box-sizing:border-box;cursor:pointer;background:var(--card);border:2px solid var(--line);border-radius:.8rem;padding:.9rem 1.1rem;display:flex;gap:.8rem}
+.opt::before{content:attr(data-l);font-weight:700;color:var(--acc);width:1.2rem}
+.opt:hover:not([disabled]){border-color:var(--acc)}
+.opt:focus-visible{outline:3px solid var(--pop);outline-offset:2px}
+.opt.right{background:var(--ok-bg);border-color:var(--ok)}
+.opt.wrong{background:var(--bad-bg);border-color:var(--bad)}
+.opt[disabled]{cursor:default}
+
+.feedback{margin:1.2rem 0;padding:.9rem 1.1rem;border-left:5px solid var(--pop);background:var(--card);border-radius:.4rem}
+.btn{cursor:pointer;font:600 1rem var(--body);padding:.8rem 1.6rem;border-radius:.6rem;border:2px solid var(--acc);background:var(--acc);color:#fff}
+.btn.ghost{background:transparent;color:var(--ink);border-color:var(--ink)}
+.btn:hover{filter:brightness(1.1)}
+.actions{display:flex;flex-wrap:wrap;gap:.8rem}
+
+.score{display:flex;align-items:center;gap:1.2rem;margin:1.4rem 0;padding:1.3rem;background:var(--pop);border-radius:1rem}
+.score strong{font:800 2.6rem/1 var(--head)}
+.review{list-style:none;padding:0;display:grid;gap:.8rem}
+.review li{background:var(--card);border-left:5px solid var(--bad);border-radius:.5rem;padding:.9rem 1.1rem}
+.review .ans{color:var(--ok);font-weight:600}
+.review p{color:var(--mut);font-size:.95rem}
+
+@media (prefers-reduced-motion:reduce){#bar{transition:none}}
+
+.welcome{text-align:center;padding:3rem 0}
+.welcome .kicker{color:var(--acc);font-weight:600;margin-bottom:.6rem}
+.welcome h2{font-size:clamp(2.2rem,8vw,3.6rem);margin-bottom:.6rem}
+.welcome .sub{max-width:30rem;margin:0 auto 2rem}
+.btn.big{font-size:1.2rem;padding:1rem 2.4rem;background:var(--pop);color:var(--ink);border-color:var(--pop)}
+#qScore{color:var(--acc)}
+
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+</style>
+</head>
+<body>
+<header><h1>Mock Test Arena</h1><p>Timed practice for campus placements</p></header>
+
+<main>
+  <!-- Page 1: Welcome -->
+  <section id="welcome" class="welcome">
+    <p class="kicker">Placement practice</p>
+    <h2>Mock Test Arena</h2>
+    <p class="sub">Choose a subject, answer 20 timed questions, and see your score and mistakes at the end.</p>
+    <button id="go" class="btn big">Start Test</button>
+  </section>
+
+  <!-- Page 2: Subjects -->
+  <section id="start" hidden>
+    <h2>Pick a topic</h2>
+    <p class="sub">30 seconds per question. Your best score is saved on this device.</p>
+    <div id="topics" class="topics"></div>
+    <button id="back" class="btn ghost" style="margin-top:1.5rem">Back</button>
+  </section>
+
+  <!-- Quiz screen -->
+  <section id="quiz" hidden>
+    <div class="top">
+      <span id="qTopic"></span>
+      <span id="qCount"></span>
+      <span id="qScore"></span>
+      <span id="timer" class="timer"></span>
+    </div>
+    <div class="track"><div id="bar"></div></div>
+    <h2 id="question"></h2>
+    <div id="options" class="options"></div>
+    <p id="feedback" class="feedback" hidden></p>
+    <button id="next" class="btn" hidden>Next question</button>
+  </section>
+
+  <!-- Result screen -->
+  <section id="result" hidden>
+    <h2>Test complete</h2>
+    <div class="score"><strong id="rScore"></strong><span id="rMsg"></span></div>
+    <div class="actions">
+      <button id="retry" class="btn">Try again</button>
+      <button id="home" class="btn ghost">Choose another topic</button>
+    </div>
+    <h3>Review your mistakes</h3>
+    <ul id="review" class="review"></ul>
+  </section>
+</main>
+
+<script>
+// Question format: [question, [4 options], correctIndex, explanation]
+// To add questions, push more arrays into any topic's list.
+const BANK = {
+  dsa: { name: "Data Structures", list: [
+    ["Time complexity of binary search on a sorted array?", ["O(1)", "O(log n)", "O(n)", "O(n log n)"], 1, "Each step halves the search range."],
+    ["Which data structure follows LIFO order?", ["Queue", "Stack", "Heap", "Graph"], 1, "A stack removes the most recently added item first."],
+    ["Worst-case time complexity of quicksort?", ["O(n log n)", "O(n)", "O(n²)", "O(log n)"], 2, "Bad pivot choices create unbalanced splits."],
+    ["Which structure does BFS typically use?", ["Stack", "Queue", "Heap", "Array only"], 1, "A queue visits nodes level by level."],
+    ["Inorder traversal of a binary search tree gives?", ["Random order", "Sorted ascending order", "Level order", "Sorted descending order"], 1, "Left, root, right visits keys in ascending order."],
+    ["Average-case lookup time in a hash table?", ["O(1)", "O(n)", "O(log n)", "O(n²)"], 0, "A good hash function spreads keys evenly."],
+    ["Which sorting algorithm guarantees O(n log n) time in the worst case?", ["Merge sort", "Quick sort", "Bubble sort", "Insertion sort"], 0, "Merge sort always splits in halves, at the cost of extra space."],
+    ["Which data structure does a program use internally to manage function calls?", ["Queue", "Stack", "Array", "Binary tree"], 1, "The call stack stores each active function call."],
+    ["Maximum number of nodes at level k of a binary tree (root at level 0)?", ["2^k", "k²", "2k", "k + 1"], 0, "Each level can hold twice as many nodes as the one above."],
+    ["Which data structure is most commonly used to build a priority queue?", ["Heap", "Stack", "Singly linked list", "Hash table"], 0, "A heap gives the highest-priority item quickly."],
+    ["Time complexity of accessing an array element by its index?", ["O(1)", "O(n)", "O(log n)", "O(n²)"], 0, "Index arithmetic gives direct access."],
+    ["Which binary tree traversal visits the root first?", ["Inorder", "Preorder", "Postorder", "Reverse inorder"], 1, "Preorder is root, left, right."],
+    ["Which data structure does iterative DFS use?", ["Queue", "Stack", "Heap", "Hash table"], 1, "A stack lets DFS go deep and backtrack."],
+    ["How many edges does a tree with n nodes have?", ["n - 1", "n", "n + 1", "2n"], 0, "A connected graph with no cycles has n - 1 edges."],
+    ["Which of these sorting algorithms is stable?", ["Heap sort", "Quick sort", "Merge sort", "Selection sort"], 2, "Stable sorts keep equal items in their original order."],
+    ["Time to insert a node at the head of a singly linked list?", ["O(1)", "O(n)", "O(log n)", "O(n²)"], 0, "Only the head pointer changes."],
+    ["Which technique keeps colliding keys in a list at the same slot?", ["Chaining", "Linear probing", "Double hashing", "Rehashing only"], 0, "Chaining attaches a list to each hash slot."],
+    ["Worst-case height of an unbalanced BST with n nodes?", ["log n", "n", "n / 2", "√n"], 1, "Inserting sorted keys builds a chain."],
+    ["Which algorithm finds shortest paths from one source with non-negative weights?", ["Dijkstra's", "Kruskal's", "Prim's", "Topological sort"], 0, "Dijkstra's repeatedly picks the nearest unvisited vertex."],
+    ["Space used by an adjacency matrix for V vertices?", ["O(V)", "O(V²)", "O(E)", "O(V log V)"], 1, "It stores a V by V grid."]
+  ]},
+  sql: { name: "SQL and Databases", list: [
+    ["Which clause filters groups after GROUP BY?", ["WHERE", "HAVING", "ORDER BY", "LIMIT"], 1, "WHERE filters rows before grouping; HAVING filters groups."],
+    ["INNER JOIN returns?", ["All rows of the left table", "Only rows matching in both tables", "All rows of both tables", "A cartesian product"], 1, "Rows without a match are dropped."],
+    ["Which keyword removes duplicate rows in a SELECT?", ["UNIQUE", "DISTINCT", "DIFFERENT", "REMOVE"], 1, "SELECT DISTINCT returns unique rows."],
+    ["Can a PRIMARY KEY column contain NULL?", ["Yes", "No", "Only one NULL", "Only in MySQL"], 1, "A primary key must uniquely identify every row."],
+    ["Which command removes all rows but keeps the table structure, without row-by-row logging?", ["DROP", "REMOVE", "TRUNCATE", "CLEAR"], 2, "TRUNCATE empties the table quickly."],
+    ["Normalization mainly reduces?", ["Data redundancy", "Number of columns", "Number of users", "Disk size of indexes"], 0, "It removes repeated data and update anomalies."],
+    ["Which JOIN returns all rows from the left table and matching rows from the right?", ["INNER JOIN", "LEFT JOIN", "RIGHT JOIN", "CROSS JOIN"], 1, "Unmatched left rows appear with NULLs on the right."],
+    ["Which of these counts only non-NULL values in a column?", ["COUNT(column)", "SUM(column)", "TOTAL(column)", "NUM(column)"], 0, "COUNT(*) counts all rows, but COUNT(column) skips NULLs."],
+    ["Which constraint links a column to a row in another table?", ["UNIQUE", "CHECK", "FOREIGN KEY", "DEFAULT"], 2, "A foreign key enforces referential integrity."],
+    ["Which statement changes the values in existing rows?", ["INSERT", "UPDATE", "ALTER", "SELECT"], 1, "ALTER changes table structure, not row values."],
+    ["Which command adds a new column to an existing table?", ["UPDATE", "ALTER TABLE", "MODIFY ROW", "INSERT COLUMN"], 1, "ALTER TABLE ... ADD changes the structure."],
+    ["Which operator matches a value against a text pattern?", ["LIKE", "IN", "BETWEEN", "EXISTS"], 0, "LIKE uses wildcards such as % and _."],
+    ["What is the default sort order of ORDER BY?", ["Ascending", "Descending", "Random", "By primary key"], 0, "Add DESC for descending order."],
+    ["Which function returns the highest value in a column?", ["TOP()", "MAX()", "HIGH()", "UPPER()"], 1, "MAX() is an aggregate function."],
+    ["Which normal form removes partial dependencies?", ["1NF", "2NF", "3NF", "BCNF"], 1, "2NF removes dependence on part of a composite key."],
+    ["In ACID, what does the I stand for?", ["Integrity", "Isolation", "Indexing", "Inheritance"], 1, "Isolation keeps concurrent transactions from interfering."],
+    ["Which statement undoes the changes of the current transaction?", ["COMMIT", "SAVE", "ROLLBACK", "REVERT"], 2, "ROLLBACK restores the last committed state."],
+    ["What does UNION do compared with UNION ALL?", ["Combines results and removes duplicates", "Combines results and keeps duplicates", "Joins tables on keys", "Returns only common rows"], 0, "UNION ALL keeps duplicates and is faster."],
+    ["In MySQL, which clause limits the number of rows returned?", ["LIMIT", "TOP", "ROWCOUNT", "MAXROWS"], 0, "SELECT ... LIMIT 5 returns at most five rows."],
+    ["What does IS NULL test for?", ["A zero value", "An empty string", "A missing or unknown value", "A false value"], 2, "NULL is not the same as zero or an empty string."]
+  ]},
+  java: { name: "Java and OOP", list: [
+    ["Which keyword prevents a class from being inherited?", ["static", "final", "abstract", "private"], 1, "A final class cannot be extended."],
+    ["Which of these is not a primitive type in Java?", ["int", "boolean", "String", "char"], 2, "String is a class."],
+    ["Method overloading means?", ["Same name, different parameters", "Same signature in a subclass", "Different names, same body", "Calling a method twice"], 0, "Overriding is redefining a method in a subclass."],
+    ["Default value of an int instance variable?", ["null", "0", "undefined", "-1"], 1, "Numeric fields default to zero."],
+    ["Which collection does not allow duplicates?", ["ArrayList", "LinkedList", "HashSet", "Vector"], 2, "A Set stores unique elements."],
+    ["Which block runs whether or not an exception occurs?", ["catch", "finally", "throw", "throws"], 1, "finally is used for cleanup code."],
+    ["Which keyword is used to inherit from a class in Java?", ["implements", "extends", "inherits", "super"], 1, "implements is for interfaces; extends is for classes."],
+    ["What is the size of an int in Java?", ["2 bytes", "4 bytes", "8 bytes", "It depends on the platform"], 1, "Java fixes int at 32 bits on every platform."],
+    ["Which of these cannot be instantiated directly?", ["Concrete class", "Abstract class", "Final class", "Public class"], 1, "Abstract classes must be extended first."],
+    ["Which method is the entry point of a Java program?", ["start()", "main()", "run()", "init()"], 1, "The JVM looks for public static void main."],
+    ["Which keyword creates a new object?", ["new", "create", "malloc", "object"], 0, "new allocates the object and calls its constructor."],
+    ["Which collection stores key-value pairs?", ["ArrayList", "HashMap", "HashSet", "Stack"], 1, "A Map links each key to a value."],
+    ["Which access modifier is the most restrictive?", ["public", "protected", "default", "private"], 3, "private allows access only inside the same class."],
+    ["What does a static method belong to?", ["The class, not an object", "Only the main method", "A single object", "The JVM only"], 0, "It can be called without creating an object."],
+    ["Which of these is a checked exception?", ["NullPointerException", "IOException", "ArithmeticException", "ArrayIndexOutOfBoundsException"], 1, "The compiler forces you to handle checked exceptions."],
+    ["Which keyword refers to the current object?", ["this", "super", "self", "current"], 0, "super refers to the parent class."],
+    ["Which statement about interfaces is true?", ["A class can implement many interfaces", "A class can extend many classes", "Interfaces hold instance variables", "Interfaces cannot have methods"], 0, "Java allows multiple interface implementation, not multiple class inheritance."],
+    ["Where are Java objects stored in memory?", ["Stack", "Heap", "CPU register", "Constant pool only"], 1, "Local variables sit on the stack; objects live on the heap."],
+    ["Which method compares the content of two Strings?", ["==", "equals()", "compare()", "same()"], 1, "== compares references, not content."],
+    ["Runtime polymorphism is achieved through?", ["Method overloading", "Method overriding", "Constructors", "Static methods"], 1, "The overridden method is chosen at run time."]
+  ]}
+};
+
+const TIME = 30, MIXED = 10;
+const $ = id => document.getElementById(id);
+let key, qs, i, score, wrong, left, tid, locked;
+
+const store = {
+  get: k => { try { return localStorage.getItem("mta_" + k); } catch (e) { return null; } },
+  set: (k, v) => { try { localStorage.setItem("mta_" + k, v); } catch (e) {} }
+};
+const shuffle = a => a.map(x => [Math.random(), x]).sort((p, q) => p[0] - q[0]).map(p => p[1]);
+const show = id => ["welcome", "start", "quiz", "result"].forEach(s => $(s).hidden = s !== id);
+
+function topics() {
+  const box = $("topics"); box.innerHTML = "";
+  const all = Object.assign({}, BANK, { mixed: { name: "Mixed Round", count: MIXED } });
+  Object.keys(all).forEach(k => {
+    const t = all[k], n = t.count || t.list.length, best = store.get(k);
+    const b = document.createElement("button");
+    b.className = "topic";
+    b.innerHTML = "<b></b><small></small><span class='best'></span>";
+    b.children[0].textContent = t.name;
+    b.children[1].textContent = n + " questions";
+    b.children[2].textContent = best ? "Best: " + best : "Not attempted yet";
+    b.onclick = () => begin(k);
+    box.appendChild(b);
+  });
+}
+function goStart() { topics(); show("start"); }
+
+function begin(k) {
+  key = k;
+  const pool = k === "mixed" ? [].concat(...Object.values(BANK).map(t => t.list)) : BANK[k].list;
+  qs = shuffle(pool).slice(0, k === "mixed" ? MIXED : pool.length);
+  i = 0; score = 0; wrong = [];
+  show("quiz"); ask();
+}
+
+function ask() {
+  const q = qs[i]; locked = false;
+  $("qTopic").textContent = key === "mixed" ? "Mixed Round" : BANK[key].name;
+  $("qCount").textContent = "Question " + (i + 1) + " of " + qs.length;
+  $("qScore").textContent = "Score: " + score;
+  $("bar").style.width = (i / qs.length * 100) + "%";
+  $("question").textContent = q[0];
+  $("feedback").hidden = true; $("next").hidden = true;
+  const box = $("options"); box.innerHTML = "";
+  q[1].forEach((text, n) => {
+    const b = document.createElement("button");
+    b.className = "opt"; b.dataset.l = "ABCD"[n]; b.textContent = text;
+    b.onclick = () => answer(n);
+    box.appendChild(b);
+  });
+  left = TIME; tick(); clearInterval(tid);
+  tid = setInterval(() => { left--; tick(); if (left <= 0) answer(-1); }, 1000);
+}
+
+function tick() {
+  $("timer").textContent = left + "s";
+  $("timer").classList.toggle("low", left <= 8);
+}
+
+function answer(n) {
+  if (locked) return;
+  locked = true; clearInterval(tid);
+  const q = qs[i], opts = $("options").children;
+  [...opts].forEach((b, k) => {
+    b.disabled = true;
+    if (k === q[2]) b.classList.add("right");
+    else if (k === n) b.classList.add("wrong");
+  });
+  if (n === q[2]) score++; else wrong.push({ q: q, picked: n });
+  $("qScore").textContent = "Score: " + score;
+  $("feedback").textContent = (n === q[2] ? "Correct. " : n < 0 ? "Time is up. " : "Not quite. ") + q[3];
+  $("feedback").hidden = false;
+  $("next").textContent = i === qs.length - 1 ? "See results" : "Next question";
+  $("next").hidden = false; $("next").focus();
+}
+
+function finish() {
+  const pct = Math.round(score / qs.length * 100);
+  $("rScore").textContent = score + " / " + qs.length;
+  $("rMsg").textContent = pct >= 80 ? "Excellent. You're placement-ready on this topic." :
+    pct >= 50 ? "Good start. Review the mistakes below and try again." :
+    "Keep practicing. Study the explanations below, then retry.";
+  const prev = parseInt(store.get(key) || "-1", 10);
+  if (pct > prev) store.set(key, pct + "%");
+  const ul = $("review"); ul.innerHTML = "";
+  if (!wrong.length) ul.innerHTML = "<li style='border-color:var(--ok)'>No mistakes. Full marks!</li>";
+  wrong.forEach(w => {
+    const li = document.createElement("li");
+    li.innerHTML = "<strong></strong><div class='ans'></div><p></p>";
+    li.children[0].textContent = w.q[0];
+    li.children[1].textContent = "Answer: " + w.q[1][w.q[2]] + (w.picked >= 0 ? " (you chose " + w.q[1][w.picked] + ")" : " (no answer)");
+    li.children[2].textContent = w.q[3];
+    ul.appendChild(li);
+  });
+  show("result");
+}
+
+$("next").onclick = () => { i++; i < qs.length ? ask() : finish(); };
+$("retry").onclick = () => begin(key);
+$("home").onclick = goStart;
+$("go").onclick = goStart;
+$("back").onclick = () => show("welcome");
+show("welcome");
+
+</script>
+</body>
+</html>
